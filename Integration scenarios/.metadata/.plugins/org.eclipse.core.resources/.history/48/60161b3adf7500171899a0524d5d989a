@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?><artifacts>
+    <artifact name="sfGmailSpreadsheet" groupId="com.example.SalesforceleadsToGoogle.proxy-service" version="1.0.0" type="synapse/proxy-service" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/proxy-services/sfGmailSpreadsheet.xml</file>
+    </artifact>
+    <artifact name="SalesforceGoogle" groupId="com.example.SalesforceleadsToGoogle.template" version="1.0.0" type="synapse/sequenceTemplate" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/templates/SalesforceGoogle.xml</file>
+    </artifact>
+</artifacts>

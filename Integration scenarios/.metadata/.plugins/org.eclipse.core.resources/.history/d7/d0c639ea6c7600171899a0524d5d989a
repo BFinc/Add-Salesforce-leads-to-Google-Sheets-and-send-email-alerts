@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="sales" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <script language="js"><![CDATA[mc.setProperty("salesforcesoap.lead.firstname",java.lang.System.getenv("salesforcesoap_lead_firstname"));
+			     mc.setProperty("salesforcesoap.lead.lastname",java.lang.System.getenv("salesforcesoap_lead_lastname"));
+			     mc.setProperty("salesforcesoap.lead.email",java.lang.System.getenv("salesforcesoap_lead_email"));
+			     mc.setProperty("salesforcesoap.lead.company",java.lang.System.getenv("salesforcesoap_lead_company"));
+			     mc.setProperty("salesforcesoap.lead.username",java.lang.System.getenv("salesforcesoap_lead_username"));
+			     mc.setProperty("salesforcesoap.lead.password",java.lang.System.getenv("salesforcesoap_lead_password"));
+			     mc.setProperty("salesforcesoap.lead.loginurl",java.lang.System.getenv("salesforcesoap_lead_loginurl"));
+			     mc.setProperty("salesforcesoap.lead.blocking",java.lang.System.getenv("salesforcesoap_lead_blocking"));
+			     mc.setProperty("spreadsheet.lead.accessToken",java.lang.System.getenv("spreadsheet_lead_accessToken"));
+			     mc.setProperty("spreadsheet.lead.clientId",java.lang.System.getenv("spreadsheet_lead_clientId"));
+			     mc.setProperty("spreadsheet.lead.clientSecret",java.lang.System.getenv("spreadsheet_lead_clientSecret"));
+			     mc.setProperty("spreadsheet.lead.refreshToken",java.lang.System.getenv("spreadsheet_lead_refreshToken"));
+			     mc.setProperty("spreadsheet.lead.apiUrl",java.lang.System.getenv("spreadsheet_lead_apiUrl"));
+			     mc.setProperty("spreadsheet.lead.spreadsheetId",java.lang.System.getenv("spreadsheet_lead_spreadsheetId"));
+			     mc.setProperty("spreadsheet.lead.spreadsheetRange",java.lang.System.getenv("spreadsheet_lead_spreadsheetRange"));
+			     mc.setProperty("gmail.lead.userId",java.lang.System.getenv("gmail_lead_userId"));
+			     mc.setProperty("gmail.lead.refreshToken",java.lang.System.getenv("gmail_lead_refreshToken"));
+			     mc.setProperty("gmail.lead.clientSecret",java.lang.System.getenv("gmail_lead_clientSecret"));
+			     mc.setProperty("gmail.lead.clientId",java.lang.System.getenv("gmail_lead_clientId"));
+			     mc.setProperty("gmail.lead.accessToken",java.lang.System.getenv("gmail_lead_accessToken"));
+			     mc.setProperty("gmail.lead.apiUrl",java.lang.System.getenv("gmail_lead_apiUrl"));
+			     mc.setProperty("gmail.lead.managerEmailId",java.lang.System.getenv("gmail_lead_managerEmailId"));]]></script>
+    <log level="custom">
+        <property expression="get-property('gmail.lead.apiUrl')" name="symbol" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd"/>
+    </log>
+    <salesforce.create configKey="sf_init">
+        <allOrNone>0</allOrNone>
+        <allowFieldTruncate>0</allowFieldTruncate>
+        <sobjects xmlns:ns3="http://org.apache.synapse/xsd" xmlns:sfdc="sfdc">{//sfdc:sObjects}</sobjects>
+    </salesforce.create>
+    <log level="full"/>
+    <payloadFactory media-type="xml">
+        <format>
+            <sfdc:sObject xmlns:sfdc="sfdc">
+                <sfdc:Ids>$1</sfdc:Ids>
+            </sfdc:sObject>
+        </format>
+        <args>
+            <arg evaluator="xml" expression="//ns:createResponse/ns:result/ns:id/text()" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd"/>
+        </args>
+    </payloadFactory>
+    <salesforce.retrieve configKey="sf_init">
+        <fieldList>FirstName,LastName,Email</fieldList>
+        <objectType>Lead</objectType>
+        <objectIDS xmlns:ns3="http://org.apache.synapse/xsd" xmlns:sfdc="sfdc">{//sfdc:sObject}</objectIDS>
+    </salesforce.retrieve>
+    <property expression="//ns:retrieveResponse/ns:result/urn:Email/text()" name="salesforce.lead.email" scope="default" type="STRING" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd" xmlns:urn="urn:sobject.partner.soap.sforce.com"/>
+    <property expression="//ns:retrieveResponse/ns:result/urn:Id/text()" name="salesforce.lead.id" scope="default" type="STRING" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd" xmlns:urn="urn:sobject.partner.soap.sforce.com"/>
+    <property expression="//ns:retrieveResponse/ns:result/urn:FirstName/text()" name="salesforce.lead.firstname" scope="default" type="STRING" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd" xmlns:urn="urn:sobject.partner.soap.sforce.com"/>
+    <property expression="//ns:retrieveResponse/ns:result/urn:LastName/text()" name="salesforce.lead.lastname" scope="default" type="STRING" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd" xmlns:urn="urn:sobject.partner.soap.sforce.com"/>
+    <script language="js"><![CDATA[var mail = mc.getProperty("salesforce.lead.email");
+			    var id = mc.getProperty("salesforce.lead.id");
+			    var fname = mc.getProperty("salesforce.lead.firstname");
+			    var lname = mc.getProperty("salesforce.lead.lastname");                           
+                          
+                var fields = "[[";                         
+                            
+                if(mail !="" && mail !=null && id !="" && id !=null && fname !="" && fname !=null && lname !="" && lname !=null){
+                fields = fields.concat('"' + mail + '","' + id + '","' + fname + '","' + lname + '"');
+                }
+                fields = fields.concat("]]");
+                mc.setProperty("spreadsheet.lead.raw",fields);]]></script>
+    <googlespreadsheet.addRowsColumnsData configKey="gs_init">
+        <spreadsheetId xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:spreadsheet.lead.spreadsheetId}</spreadsheetId>
+        <range xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:spreadsheet.lead.spreadsheetRange}</range>
+        <valueInputOption>RAW</valueInputOption>
+        <values xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:spreadsheet.lead.raw}</values>
+    </googlespreadsheet.addRowsColumnsData>
+    <property expression="json-eval($.updates.updatedRange)" name="spreadsheet.lead.updatedRange" scope="default" type="STRING"/>
+    <googlespreadsheet.getCellData configKey="gs_init">
+        <spreadsheetId xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:spreadsheet.lead.spreadsheetId}</spreadsheetId>
+        <range xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:spreadsheet.lead.updatedRange}</range>
+    </googlespreadsheet.getCellData>
+    <property expression="json-eval($.values[0][0])" name="spreadsheet.lead.mailId" scope="default" type="STRING"/>
+    <property expression="json-eval($.values[0][1])" name="spreadsheet.lead.sfId" scope="default" type="STRING"/>
+    <property expression="json-eval($.values[0][2])" name="spreadsheet.lead.firstName" scope="default" type="STRING"/>
+    <property expression="json-eval($.values[0][3])" name="spreadsheet.lead.lastName" scope="default" type="STRING"/>
+    <script language="js"><![CDATA[var mail = mc.getProperty("spreadsheet.lead.mailId");
+			    var id = mc.getProperty("spreadsheet.lead.sfId");
+			    var fname = mc.getProperty("spreadsheet.lead.firstName");
+			    var lname = mc.getProperty("spreadsheet.lead.lastName");                           
+                var contentType = "The New Lead Registration detail is: "                         
+                            
+                if(mail !="" && mail !=null && id !="" && id !=null && fname !="" && fname !=null && lname !="" && lname !=null){
+                contentType = contentType.concat('"The Email Id is: ' + mail + '","The Salesforce Id is: ' + id + '","The Firstname is: ' + fname + '","The Lastname is: ' + lname + '"');
+                }
+                mc.setProperty("gmail.lead.contentBody",contentType);]]></script>
+    <gmail.sendMail configKey="gm_init">
+        <to xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:gmail.lead.managerEmailId}</to>
+        <subject>New Lead Registration</subject>
+        <from xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:gmail.lead.userId}</from>
+        <messageBody xmlns:ns3="http://org.apache.synapse/xsd">{$ctx:gmail.lead.contentBody}</messageBody>
+        <contentType>text/html; charset=UTF-8</contentType>
+    </gmail.sendMail>
+    <property expression="$axis2:HTTP_SC" name="sendMailToManager" scope="default" type="STRING" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd"/>
+    <filter regex="true" source="get-property('sendMailToManager') != 200" xmlns:ns="http://org.apache.synapse/xsd" xmlns:ns3="http://org.apache.synapse/xsd">
+        <then>
+            <log level="full"/>
+            <property name="responseMessage" scope="default" type="STRING" value="Unable to Send the Message to Manager "/>
+            <loopback/>
+        </then>
+        <else>
+            <log level="full"/>
+            <property name="responseMessage" scope="default" type="STRING" value="Send an alert successfully"/>
+            <loopback/>
+        </else>
+    </filter>
+    <drop/>
+</sequence>

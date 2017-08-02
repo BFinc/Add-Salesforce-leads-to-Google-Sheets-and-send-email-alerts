@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;SalesforceleadsToGoogle/src/main/synapse-config/templates/SalesforceGoogle.xml&apos;" deleteContents="false" description="Delete resource &apos;SalesforceleadsToGoogle/src/main/synapse-config/templates/SalesforceGoogle.xml&apos;" element1="/SalesforceleadsToGoogle/src/main/synapse-config/templates/SalesforceGoogle.xml" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1501560211725"/>
+</session>
